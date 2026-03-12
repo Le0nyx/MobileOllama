@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../models/chat_message.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -69,8 +70,13 @@ class MessageBubble extends StatelessWidget {
                       }).toList(),
                     ),
                   ),
-                // Text content with basic code block highlighting
-                _buildContent(context),
+                // Render content: markdown for assistant, plain text for user
+                _isUser
+                    ? SelectableText(
+                        message.content,
+                        style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
+                      )
+                    : _buildMarkdownContent(context),
               ],
             ),
           ),
@@ -79,98 +85,89 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildMarkdownContent(BuildContext context) {
     final theme = Theme.of(context);
-    final text = message.content;
+    final isDark = theme.brightness == Brightness.dark;
 
-    // Simple code block detection: split on ``` markers
-    final codeBlockPattern = RegExp(r'```(\w*)\n?([\s\S]*?)```');
-    final matches = codeBlockPattern.allMatches(text).toList();
-
-    if (matches.isEmpty) {
-      return SelectableText(
-        text,
-        style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
-      );
-    }
-
-    final widgets = <Widget>[];
-    int lastEnd = 0;
-
-    for (final match in matches) {
-      // Text before code block
-      if (match.start > lastEnd) {
-        widgets.add(SelectableText(
-          text.substring(lastEnd, match.start),
-          style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
-        ));
-      }
-
-      // Code block
-      final lang = match.group(1) ?? '';
-      final code = match.group(2) ?? '';
-      widgets.add(_buildCodeBlock(context, code.trimRight(), lang));
-
-      lastEnd = match.end;
-    }
-
-    // Text after last code block
-    if (lastEnd < text.length) {
-      widgets.add(SelectableText(
-        text.substring(lastEnd),
-        style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
-      ));
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
-    );
-  }
-
-  Widget _buildCodeBlock(BuildContext context, String code, String language) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF6F6F6),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (language.isNotEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF2D2D2D)
-                    : const Color(0xFFE8E8E8),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(8)),
-              ),
-              child: Text(
-                language,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: SelectableText(
-              code,
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 13,
-                color: isDark ? Colors.grey[300] : Colors.grey[800],
-              ),
+    return MarkdownBody(
+      data: message.content,
+      selectable: true,
+      styleSheet: MarkdownStyleSheet(
+        p: theme.textTheme.bodyLarge?.copyWith(
+          height: 1.6,
+          color: isDark ? Colors.grey[200] : Colors.grey[900],
+        ),
+        h1: theme.textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        h2: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        h3: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        code: TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 13,
+          color: isDark ? const Color(0xFFE06C75) : const Color(0xFFC7254E),
+          backgroundColor:
+              isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF0F0F0),
+        ),
+        codeblockDecoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF6F6F6),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        codeblockPadding: const EdgeInsets.all(12),
+        codeblockAlign: WrapAlignment.start,
+        blockquoteDecoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+              width: 3,
             ),
           ),
-        ],
+        ),
+        blockquotePadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        listBullet: theme.textTheme.bodyLarge?.copyWith(
+          color: isDark ? Colors.grey[300] : Colors.grey[700],
+        ),
+        tableHead: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        tableBody: TextStyle(
+          color: isDark ? Colors.grey[200] : Colors.grey[900],
+        ),
+        tableBorder: TableBorder.all(
+          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+        ),
+        tableCellsPadding: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: 4,
+        ),
+        horizontalRuleDecoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+            ),
+          ),
+        ),
+        a: TextStyle(
+          color: isDark ? const Color(0xFF82AAFF) : const Color(0xFF1976D2),
+          decoration: TextDecoration.underline,
+        ),
+        strong: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        em: TextStyle(
+          fontStyle: FontStyle.italic,
+          color: isDark ? Colors.grey[200] : Colors.grey[800],
+        ),
       ),
     );
   }

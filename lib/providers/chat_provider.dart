@@ -43,6 +43,7 @@ class ChatProvider extends ChangeNotifier {
     required String model,
     List<String>? images,
     String? systemPrompt,
+    String? baseUrl,
   }) async {
     if (text.trim().isEmpty && (images == null || images.isEmpty)) return;
 
@@ -101,6 +102,7 @@ class ChatProvider extends ChangeNotifier {
         apiKey: apiKey,
         model: model,
         messages: apiMessages,
+        baseUrl: baseUrl,
       )) {
         assistantMsg.content += chunk;
         notifyListeners();

@@ -118,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 model: settings.selectedModel,
                 images: images,
                 systemPrompt: settings.systemPrompt,
+                baseUrl: settings.apiEndpoint,
               );
               // Auto-save session to history.
               if (chatProvider.currentSession != null) {

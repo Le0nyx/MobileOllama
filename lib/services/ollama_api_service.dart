@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/ollama_model.dart';
 
 class OllamaApiService {
-  static const String _baseUrl = 'https://ollama.com/api';
+  static const String defaultBaseUrl = 'https://ollama.com/api';
 
   Map<String, String> _headers(String apiKey) => {
         'Authorization': 'Bearer $apiKey',
@@ -12,10 +12,11 @@ class OllamaApiService {
       };
 
   /// Test the connection by fetching models.
-  Future<bool> testConnection(String apiKey) async {
+  Future<bool> testConnection(String apiKey, {String? baseUrl}) async {
+    final url = baseUrl ?? defaultBaseUrl;
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/tags'), headers: _headers(apiKey))
+          .get(Uri.parse('$url/tags'), headers: _headers(apiKey))
           .timeout(const Duration(seconds: 10));
       return response.statusCode == 200;
     } catch (_) {
@@ -23,10 +24,11 @@ class OllamaApiService {
     }
   }
 
-  /// Fetch available models from the Ollama cloud API.
-  Future<List<OllamaModel>> fetchModels(String apiKey) async {
+  /// Fetch available models from the Ollama API.
+  Future<List<OllamaModel>> fetchModels(String apiKey, {String? baseUrl}) async {
+    final url = baseUrl ?? defaultBaseUrl;
     final response = await http
-        .get(Uri.parse('$_baseUrl/tags'), headers: _headers(apiKey))
+        .get(Uri.parse('$url/tags'), headers: _headers(apiKey))
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
@@ -47,10 +49,12 @@ class OllamaApiService {
     required String apiKey,
     required String model,
     required List<Map<String, dynamic>> messages,
+    String? baseUrl,
   }) async* {
+    final url = baseUrl ?? defaultBaseUrl;
     final client = http.Client();
     try {
-      final request = http.Request('POST', Uri.parse('$_baseUrl/chat'));
+      final request = http.Request('POST', Uri.parse('$url/chat'));
       request.headers.addAll(_headers(apiKey));
       request.body = json.encode({
         'model': model,

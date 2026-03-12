@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_session.dart';
+import 'ollama_api_service.dart';
 
 class StorageService {
   static const _keyApiKey = 'api_key';
@@ -9,6 +10,7 @@ class StorageService {
   static const _keyThemeMode = 'theme_mode';
   static const _keyChatSessions = 'chat_sessions';
   static const _keySystemPrompt = 'system_prompt';
+  static const _keyApiEndpoint = 'api_endpoint';
 
   // --- Settings ---
 
@@ -79,5 +81,17 @@ class StorageService {
   Future<String> loadSystemPrompt() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keySystemPrompt) ?? '';
+  }
+
+  // --- API Endpoint ---
+
+  Future<void> saveApiEndpoint(String endpoint) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyApiEndpoint, endpoint);
+  }
+
+  Future<String> loadApiEndpoint() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyApiEndpoint) ?? OllamaApiService.defaultBaseUrl;
   }
 }

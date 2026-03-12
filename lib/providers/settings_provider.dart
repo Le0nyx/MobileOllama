@@ -10,6 +10,7 @@ class SettingsProvider extends ChangeNotifier {
   String _apiKey = '';
   String _selectedModel = '';
   String _systemPrompt = '';
+  String _apiEndpoint = OllamaApiService.defaultBaseUrl;
   ThemeMode _themeMode = ThemeMode.dark;
   List<OllamaModel> _availableModels = [];
   bool _isLoadingModels = false;
@@ -17,6 +18,7 @@ class SettingsProvider extends ChangeNotifier {
   String get apiKey => _apiKey;
   String get selectedModel => _selectedModel;
   String get systemPrompt => _systemPrompt;
+  String get apiEndpoint => _apiEndpoint;
   ThemeMode get themeMode => _themeMode;
   List<OllamaModel> get availableModels => _availableModels;
   bool get isLoadingModels => _isLoadingModels;
@@ -26,6 +28,7 @@ class SettingsProvider extends ChangeNotifier {
     _apiKey = await _storage.loadApiKey() ?? '';
     _selectedModel = await _storage.loadSelectedModel() ?? '';
     _systemPrompt = await _storage.loadSystemPrompt();
+    _apiEndpoint = await _storage.loadApiEndpoint();
     _themeMode = await _storage.loadThemeMode();
     notifyListeners();
 
@@ -52,6 +55,12 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setApiEndpoint(String endpoint) async {
+    _apiEndpoint = endpoint;
+    await _storage.saveApiEndpoint(endpoint);
+    notifyListeners();
+  }
+
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     await _storage.saveThemeMode(mode);
@@ -64,7 +73,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _availableModels = await _api.fetchModels(_apiKey);
+      _availableModels = await _api.fetchModels(_apiKey, baseUrl: _apiEndpoint);
       // If no model is selected yet, pick the first one.
       if (_selectedModel.isEmpty && _availableModels.isNotEmpty) {
         _selectedModel = _availableModels.first.name;
@@ -80,6 +89,6 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<bool> testConnection() async {
     if (_apiKey.isEmpty) return false;
-    return _api.testConnection(_apiKey);
+    return _api.testConnection(_apiKey, baseUrl: _apiEndpoint);
   }
 }

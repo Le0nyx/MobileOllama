@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../services/ollama_api_service.dart';
 import '../widgets/model_selector.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,8 +14,10 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _apiKeyController;
   late TextEditingController _systemPromptController;
+  late TextEditingController _endpointController;
   bool _obscureApiKey = true;
   bool _isTesting = false;
+  bool _useCustomEndpoint = false;
 
   @override
   void initState() {
@@ -22,12 +25,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final settings = context.read<SettingsProvider>();
     _apiKeyController = TextEditingController(text: settings.apiKey);
     _systemPromptController = TextEditingController(text: settings.systemPrompt);
+    _endpointController = TextEditingController(text: settings.apiEndpoint);
+    _useCustomEndpoint =
+        settings.apiEndpoint != OllamaApiService.defaultBaseUrl;
   }
 
   @override
   void dispose() {
     _apiKeyController.dispose();
     _systemPromptController.dispose();
+    _endpointController.dispose();
     super.dispose();
   }
 
@@ -130,6 +137,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
+          // --- API Endpoint ---
+          _buildSectionHeader('API Endpoint'),
+          const SizedBox(height: 8),
+          _buildCard(
+            isDark: isDark,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Choose between the default Ollama cloud endpoint or a custom URL (e.g. a local Ollama server).',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Use custom endpoint'),
+                  subtitle: Text(
+                    _useCustomEndpoint
+                        ? 'Custom URL'
+                        : 'Default: ${OllamaApiService.defaultBaseUrl}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  ),
+                  value: _useCustomEndpoint,
+                  onChanged: (val) {
+                    setState(() => _useCustomEndpoint = val);
+                    if (!val) {
+                      _endpointController.text =
+                          OllamaApiService.defaultBaseUrl;
+                      settings.setApiEndpoint(
+                          OllamaApiService.defaultBaseUrl);
+                    }
+                  },
+                ),
+                if (_useCustomEndpoint) ...[  
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _endpointController,
+                    decoration: const InputDecoration(
+                      labelText: 'Custom API URL',
+                      hintText: 'http://192.168.1.100:11434/api',
+                      border: OutlineInputBorder(),
+                      helperText: 'Include /api at the end',
+                    ),
+                    keyboardType: TextInputType.url,
+                    onChanged: (val) {
+                      settings.setApiEndpoint(val.trim());
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      ActionChip(
+                        avatar: const Icon(Icons.computer, size: 16),
+                        label: const Text('localhost'),
+                        onPressed: () {
+                          _endpointController.text =
+                              'http://localhost:11434/api';
+                          settings.setApiEndpoint(
+                              'http://localhost:11434/api');
+                        },
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.cloud_outlined, size: 16),
+                        label: const Text('Ollama Cloud'),
+                        onPressed: () {
+                          _endpointController.text =
+                              OllamaApiService.defaultBaseUrl;
+                          settings.setApiEndpoint(
+                              OllamaApiService.defaultBaseUrl);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // --- Model Selection ---
           _buildSectionHeader('Model'),
           const SizedBox(height: 8),
@@ -196,6 +286,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
+          // --- Model Compatibility Note ---
+          _buildSectionHeader('Model Compatibility'),
+          const SizedBox(height: 8),
+          _buildCard(
+            isDark: isDark,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Not all models work the same way. Some things to keep in mind:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildInfoRow(
+                  isDark: isDark,
+                  icon: Icons.image_outlined,
+                  text: 'Some models support image attachments (e.g. LLaVA, Gemma 3, Moondream), while most are text-only.',
+                ),
+                const SizedBox(height: 8),
+                _buildInfoRow(
+                  isDark: isDark,
+                  icon: Icons.warning_amber_rounded,
+                  text: 'Some models may not work due to compatibility issues with the API endpoint or configuration.',
+                ),
+                const SizedBox(height: 8),
+                _buildInfoRow(
+                  isDark: isDark,
+                  icon: Icons.swap_horiz,
+                  text: 'If a model isn\'t responding, try switching to a different one.',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // --- About ---
           _buildSectionHeader('About'),
           const SizedBox(height: 8),
@@ -206,14 +334,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   leading: const Icon(Icons.info_outline),
                   title: const Text('MobileOllama'),
-                  subtitle: const Text('v1.0.1'),
+                  subtitle: const Text('v1.0.2'),
                   dense: true,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.cloud_outlined),
                   title: const Text('API Endpoint'),
-                  subtitle: const Text('https://ollama.com/api'),
+                  subtitle: Text(settings.apiEndpoint),
                   dense: true,
                 ),
               ],
@@ -261,6 +389,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : null,
       onTap: () => settings.setThemeMode(mode),
       dense: true,
+    );
+  }
+
+  Widget _buildInfoRow({
+    required bool isDark,
+    required IconData icon,
+    required String text,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          ),
+        ),
+      ],
     );
   }
 }
