@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   leading: const Icon(Icons.info_outline),
                   title: const Text('MobileOllama'),
-                  subtitle: const Text('v1.0.0'),
+                  subtitle: const Text('v1.0.1'),
                   dense: true,
                 ),
                 const Divider(height: 1),
