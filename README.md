@@ -5,14 +5,14 @@
 <h1 align="center">MobileOllama</h1>
 
 <p align="center">
-  A clean mobile chat interface for the <a href="https://ollama.com">Ollama</a> API — no distractions, just chat.
+  A clean mobile chat interface for the <a href="https://ollama.com">Ollama</a> API, no distractions, just chat.
 </p>
 
 ---
  
 ## About
 
-MobileOllama brings the Ollama experience to your phone (currently mainly for Android). Connect to the Ollama cloud API, pick a model, and start chatting all from a simple, ChatGPT-inspired interface. Your conversations are saved locally so you can pick up where you left off.
+MobileOllama brings the Ollama experience to your phone (currently mainly for Android). Connect to the Ollama cloud API, pick a model, and start chatting all from a simple, ChatGPT inspired interface. Your conversations are saved locally so you can pick up where you left off.
 
 ## Features
 
