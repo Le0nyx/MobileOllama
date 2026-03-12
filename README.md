@@ -12,7 +12,7 @@
 
 ## About
 
-MobileOllama brings the Ollama experience to your phone. Connect to the Ollama cloud API, pick a model, and start chatting all from a simple, ChatGPT-inspired interface. Your conversations are saved locally so you can pick up where you left off.
+MobileOllama brings the Ollama experience to your phone (currently mainly for Android). Connect to the Ollama cloud API, pick a model, and start chatting all from a simple, ChatGPT-inspired interface. Your conversations are saved locally so you can pick up where you left off.
 
 ## Features
 
