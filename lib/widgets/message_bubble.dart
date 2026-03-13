@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../models/chat_message.dart';
 
@@ -9,6 +10,28 @@ class MessageBubble extends StatelessWidget {
   const MessageBubble({super.key, required this.message});
 
   bool get _isUser => message.role == 'user';
+
+  Future<void> _copyMessageAsMarkdown(BuildContext context) async {
+    final roleTitle = _isUser ? 'User' : 'Assistant';
+    final markdown = StringBuffer()
+      ..writeln('### $roleTitle')
+      ..writeln()
+      ..writeln(message.content.trim());
+
+    if (message.images != null && message.images!.isNotEmpty) {
+      markdown
+        ..writeln()
+        ..writeln('_Attached images: ${message.images!.length}_');
+    }
+
+    await Clipboard.setData(ClipboardData(text: markdown.toString().trim()));
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message copied as Markdown')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +69,16 @@ class MessageBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    onPressed: () => _copyMessageAsMarkdown(context),
+                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    splashRadius: 18,
+                    tooltip: 'Copy markdown',
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
                 // Show images if present
                 if (message.images != null && message.images!.isNotEmpty)
                   Padding(
